@@ -1,0 +1,219 @@
+#include "buff.h"
+
+int gen_board(const uint8_t (*rollerIcon)[BOARD_COLUMN][ROLLER_ICON_LEN], const uint16_t (*rollerIconNum)[BOARD_COLUMN], const int (*reelWeight)[2], int len, int* icons)
+{
+    int i, j;
+    int index = 0;
+    int pos = 0;
+
+    int reelPos = getRandomValue(reelWeight, len, REEL_WEIGHT);
+    if(len == BASE_REEL_NUM)   // 免费游戏
+        pos = reelPos; 
+    else
+        pos = reelPos < E_ICON_PIC5 ? 0 : reelPos-4;
+
+    for (i = 0; i < BOARD_COLUMN; i++)
+    {
+        index = GetRand(rollerIconNum[pos][i]);
+        for (j = 0; j < BOARD_ROW; j++)
+        {
+            if(index+j >= rollerIconNum[pos][i])
+                index -= rollerIconNum[pos][i];
+            icons[j+BOARD_ROW*i] = rollerIcon[pos][i][index+j];
+            
+            //将免费游戏的PIC1图标根据相对应的权重替换成金牛符
+            if(len == BASE_REEL_NUM)
+            {
+                if(icons[j+BOARD_ROW*i] == E_ICON_PIC1)
+                {
+                    int ran = GetRand(gPic1ToGoldWeight[2])+1;
+                    if(ran <= gPic1ToGoldWeight[0])
+                        icons[j+BOARD_ROW*i] = E_ICON_BUFF;
+                }
+            }
+        }
+    }
+    return reelPos;
+}
+
+int calIconNum(int *icons, int icon)
+{
+    int i;
+    int count = 0;
+    for (i = 0; i < BOARD_ICON_NUM; i++)
+    {
+        if(icons[i] == icon)
+            count++;
+    }
+    return count;
+}
+
+int findScatPos(int* icons, int icon)
+{
+    int i;
+    for (i = 0; i < BOARD_ICON_NUM; i++)
+    {
+        if(icons[i] == icon)
+            break;
+    }
+    int row = i/BOARD_ROW;
+    if(row == BOARD_COLUMN)
+        return 0;
+    return row;
+}
+
+void calArrangeIconNum(int prizeType, int* icons, int icon, int *gameMulti, int wildMulti)
+{
+    int i, j;
+    int iconNum = 1;
+    int targetIcon = 0;
+    int sameCount = 0;
+
+    int index = findScatPos(icons, icon);
+    for (i = index; i < BOARD_COLUMN; i++)
+    {
+        int num = 0;
+        for (j = 0; j < BOARD_ROW; j++)
+        {
+            if(icons[i*BOARD_ROW+j] == icon)
+            {
+                targetIcon = icon;
+                sameCount++;
+                num++;
+                break;
+            }
+        }
+        if(num == 0)
+            break;
+    }
+
+    //计算每一列中元素的个数，累乘
+    for (i = index; i < BOARD_COLUMN; i++)
+    {
+        int colIconCount = 0;
+        for (j = 0; j < BOARD_ROW; j++)
+        {
+            if(icons[i*BOARD_ROW+j] == icon) 
+                colIconCount++;
+        }
+        if(colIconCount == 0)
+            break;
+
+        iconNum *= colIconCount;
+    }
+
+    if(sameCount > 1 && targetIcon < E_ICON_WILD)
+    {
+        int multi = gIconMulti[targetIcon-1][sameCount] * iconNum * wildMulti;
+        *gameMulti += multi;
+        gPayIconScore[prizeType][targetIcon-1][sameCount] += multi;
+    }
+}
+
+int isWildIcon(int icon)
+{
+    return icon == gWildMulti[0][0] || icon == gWildMulti[1][0] || icon == gWildMulti[2][0];
+}
+
+void changeIcon(int prizeType, int* icons, int icon, int *gameMulti)
+{
+    int i;
+    int wildMulti = 1;
+    int iconsTemp[BOARD_ICON_NUM] = {0};
+    
+    memcpy(iconsTemp, icons, sizeof(iconsTemp));
+    for (i = 0; i < BOARD_ICON_NUM; i++)
+    {
+        if(isWildIcon(icons[i]))
+            wildMulti *= gWildMulti[icons[i]-E_ICON_WILD][1];
+        if(isWildIcon(iconsTemp[i]))
+            iconsTemp[i] = icon;
+    }
+    calArrangeIconNum(prizeType, iconsTemp, icon, gameMulti, wildMulti);
+}
+
+void normalIconsToBuff(int reelPos, int *icons)
+{
+    int i;
+    if(reelPos >= E_ICON_PIC1 && reelPos < E_ICON_PIC5)
+    {
+        for (i = 0; i < BOARD_ICON_NUM; i++)
+        {
+            if(icons[i] == reelPos+1)
+                icons[i] = E_ICON_PIC1;
+        }
+    }
+}
+
+void freeIconsToBuff(int *icons, int buffCounter)
+{
+    int i, j;
+    for (i = 0; i < BOARD_ICON_NUM; i++)
+    {
+        if(icons[i] == E_ICON_BUFF)
+            icons[i] = E_ICON_PIC1;
+    }
+
+    for (i = 0; i < 4; i++)
+    {
+        if(buffCounter >= gBuffChangeIcons[i][1])
+        {
+            for (j = 0; j < BOARD_ICON_NUM; j++)
+            {
+                if(icons[j] == gBuffChangeIcons[i][0])
+                    icons[j] = E_ICON_PIC1;
+            }
+        }
+    }
+}
+
+void cal_boardMulti(int prizeType, int *icons, int *gameMulti, int scatType)
+{
+    int i, m;
+    int reIcon[BOARD_ICON_NUM] = {0};
+    for (i = 0; i < BOARD_ICON_NUM; i++)
+    {
+        if(icons[i] == E_ICON_WILD)
+        {
+            if(prizeType == E_PRIZETYPE_NORMAL)
+                icons[i] = getRandomValue(gNormalWildWeight, 3, WILD_WEIGHT);
+            else
+                icons[i] = getRandomValue(gFreeWildWeight, 3, WILD_WEIGHT);
+        }
+    }
+
+    for (m = 0; m < BOARD_ROW; m++)
+    {
+        if(!reIcon[icons[m]-1])
+            changeIcon(prizeType, icons, icons[m], gameMulti);
+        reIcon[icons[m]-1] = 1;
+    }
+    
+    int scatNum = calIconNum(icons, scatType);
+    if(scatNum >= 3)
+    {
+        *gameMulti += gIconMulti[scatType-1][scatNum];
+        gPayIconScore[prizeType][scatType-1][scatNum] += gIconMulti[scatType-1][scatNum];
+    }
+}
+
+int getPrizeType(int *icons)
+{
+    if(calIconNum(icons, E_ICON_NORMAL_SCAT) >= gFreeGameInfo[1][0])
+        return E_PRIZETYPE_FREEGAME;
+    else
+        return E_PRIZETYPE_NORMAL;
+}
+
+int getRandomValue(const int (*weight)[2], int len, int weightValue)
+{
+    int i;
+    int ran = GetRand(weightValue)+1;
+    for(i = len-1; i >= 0; i--)
+    {
+        if(ran <= weight[i][1])
+            return weight[i][0];
+        ran -= weight[i][1];
+    }
+    return 0;
+}
