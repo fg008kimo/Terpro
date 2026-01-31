@@ -1,0 +1,1 @@
+vmhgfs-fuse .host: /shared/mnt/hgfs -o nonempty

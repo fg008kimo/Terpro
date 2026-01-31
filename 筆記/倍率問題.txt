@@ -1,0 +1,5 @@
+倍率問題
+
+normalMulti, freegameMulti, totalMulti都返回原始盤面分數 * times(可是因為錢來了是單線)
+
+times是讓總分維持int的參數  例如某遊戲最小單位0.1, times就是10  讓總分保持整數

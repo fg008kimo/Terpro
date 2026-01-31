@@ -1,0 +1,4 @@
+bash -x [script name]: 執行時列出所有scipt內訊息(可是要在script內有echo才會印)
+
+/var/log/message/ <=紀錄系統log
+可用tail -f /var/log/message/  隨時監控

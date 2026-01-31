@@ -1,0 +1,19 @@
+C 語言中若要產生亂數，可以使用 stdlib.h 中的 rand 函數，而在呼叫 rand 函數之前，要先使用 srand 函數設定初始的亂數種子：
+
+#include <stdio.h>
+#include <stdlib.h> /* 亂數相關函數 */
+#include <time.h>   /* 時間相關函數 */
+int main(){
+  /* 設定亂數種子 */
+  srand( time(NULL) );
+
+  /* 產生亂數 */
+  int x = rand();
+
+  printf("x = %d\n", x);
+  return 0;
+}
+執行後的輸出為：
+
+x = 159136674
+rand 所產生的亂數是一個整數，其值介於 0 到 RAND_MAX 之間（最小是 0，最大則為 RAND_MAX），若想要看 RAND_MAX 的實際數值，可以用 printf 將其輸出後查看。

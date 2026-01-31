@@ -1,0 +1,117 @@
+20231107-----------------------------------------------------------
+[root@localhost sh]# ./start_all.sh 
+########################################
+##               begin reStart        ##
+########################################
+Update ???:1? Y/N
+Y
+Updating ???:1...
+kill: usage: kill [-s sigspec | -n signum | -sigspec] pid | jobspec ... or kill -l [sigspec]
+./start_all.sh: line 25: /home/sean/bin/1/platform_server: No such file or directory
+/home/sean/bin/1/platform_server -p 10000
+kill: usage: kill [-s sigspec | -n signum | -sigspec] pid | jobspec ... or kill -l [sigspec]
+./start_all.sh: line 25: /home/sean/bin/1/random_number_generator: No such file or directory
+/home/sean/bin/1/random_number_generator -p 10001
+kill: usage: kill [-s sigspec | -n signum | -sigspec] pid | jobspec ... or kill -l [sigspec]
+./start_all.sh: line 25: /home/sean/bin/1/mammon_3000195_server: No such file or directory
+/home/sean/bin/1/mammon_3000195_server -p 15079
+[root@localhost sh]# cd /home/sean/
+
+不管在vm內 路徑用sean或syc都一樣  都無法造出檔案或路徑
+子鎮說先把compil_all.sh和start_all.sh的script裡的platform_server和random_number_generator都先註解掉
+
+20231108-----------------------------------------------------------
+compil_all.sh生成出來的object(mammon_3000195_server)會在/root/bin/1/內  要cp到/home/syc/bin/1/內
+
+zlog一直會產生錯誤 因為沒有在/home/syc/建出log資料夾
+追code路徑: algMammon.c:int main()->zlog.c:int dzlog_init()->zlog.c:static int zlog_init_inner()->conf.c:zlog_conf_t *zlog_conf_new()
+->zlog_conf_build_with_file()->zlog_conf_parse_line()->zlog_rule_new()->rule.c():zlog_rule_t *zlog_rule_new()
+
+rng連線錯誤:
+lgMammon.c:int main()->server.c:handle_start_setting()->utils.c:InitRandom()->rng.c:RngInit()->RngHbThreadCreate()->RngHbThread()
+->RngRequest()->RngGenSocket()
+1->RngSocketNormal()->RngSetTcpNoDelay()->RngSockStrFlag()
+2->RngNetIsValid() 這邊tcpInfo.tcpi_state == TCP_ESTABLISHED不相等 tcpInfo.tcpi_state是7  TCP_ESTABLISHED是1
+=>要把__LINUX__關掉  就可以跑遊戲
+
+20231109-----------------------------------------------------------
+algMammon.c:main()->test_main()開始看
+另參考3000195game_flow.c
+
+20231228-----------------------------------------------------------
+開啟錄影介面: windows+ G
+錄影功能快捷: windows + Alt +R
+
+20240102-----------------------------------------------------------
+要刪掉C曹checkout出來的svn code:
+要先把裡面東西刪掉 只剩資料夾
+然後右鍵=>更多選項=>Mcfee:銷毀(但電腦要重啟)
+
+20240103-----------------------------------------------------------
+遠端ip 10.13.101.10(需要泰迪搭建隧道
+然後ssh 192.168.100.5到內測服
+傳送檔案: 用FileZilla 輸入ip  帳密 Port:22   可以把檔案直接拉進去(也可用中國的FinalShell)
+
+
+
+Finalshell使用方式:
+按資料夾圖案=>ssh=>名稱打這台的名稱
+主機打IP  端口預設22
+方法密碼
+用戶名 syc
+密碼 kjsdfkHYls
+
+上傳下載檔案:
+除了Filezilla 中國這邊可以使用FinalShell rz或sz上傳或下載檔案
+
+在192.168.100.5(內測服)部屬遊戲:
+1.發布代碼,裡面開關
+algMammon.c要開啟mykill_1 和  mykill_2 (line 203 和 292)
+server.h 要開LINUX  關掉DEBUG
+
+2.部屬
+步骤一：压缩syapp文件
+步骤二：导入finalshell(在介面打rz 可以導入桌面的壓縮檔)
+步骤三：解压，指令：unzip syapp.zip
+步骤四：进入syapp文件夹
+步骤五：chmod 777 compile_all.sh start_all.sh，使两个脚本可以编译
+步骤六：就正常运行两个脚本
+(正確執行的話 ps aux|grep 遊戲ID會看到他在背景執行)
+
+3.部屬成功後 在final shell上刪除syapp.zip以及syapp資料夾
+(src code不要被別人看到)
+
+192.168.100.5 改部屬 192.168.160.12 (因為是不同家公司)(部屬都是部屬在內部服務器,或稱內測服)
+
+20240104-----------------------------------------------------------
+*從後端的指令 telnet IP_addr port_num  可以知道
+遊戲ID = 端口號 = port_num
+所以port 10000~60000是拿來做為遊戲ID使用
+
+*遊戲放背景會掛掉  可以去/home/syc/log 底下查原因(如果有先開啟log的話)
+
+*編譯的時候user要用syc(可下su syc做切換)  否則因為root和syc的環境變數不同 他們的$HOME參數值不一樣, 編譯完放置object code路徑會不一樣
+
+20240105-----------------------------------------------------------
+用syc編譯時 新移入的那包code因為在vmhgfs是用root移入的所以在編譯時沒有權限先刪除上一次的檔案
+解法: 先把hgfs的權限改成 777 
+再把syc加到visudo 裡面  裡面加上 syc     ALL=(ALL) NOPASSWD: ALL
+
+然後將新的那包code 移動到slot下之後
+修改owner給syc(因為上面windows的/shared把 遊戲那包code放到/mnt/hgfs/的使用者是root  所以這包code只有roo有權限)
+修改這包code的擁有者為syc的指令: sudo chown -R syc:syc 3000202/
+這樣就可以用syc編譯這包遊戲
+
+20240131-----------------------------------------------------------
+將VM setting的CPU顆數和memory分配量提升看看能不能提升程式運算效率
+
+20240325-----------------------------------------------------------
+伺服器的倍率是10^6
+若我乘到 board_calMulti會爆掉
+所以我固定board_calMulti * 100(fregameMultis裡面乘上betScore本身也有乘100了)
+10^6傳到後端給他乘
+
+20240328-----------------------------------------------------------
+瘋狂來錢 本以為一線而已  所以lineBet和lineNum換成betScore(就是excel上的level倍率)
+但這樣會讓牌面庫後台不好設計
+所以又改回lineBet和lineNum

@@ -1,0 +1,51 @@
+su: 切換root
+
+vm login: ssh root@192.168.227.128
+密碼 常用
+
+解壓縮3000195 and zlog
+把zlog放到3000195下
+然後在/home/下 mkdir syc/sycapp/slot 和 syc/sycapp/sh
+
+腳本都放sh裡面  3000195等遊戲放slot裡面
+compile_all.sh和start_all.sh兩個腳本要把不是3000195的部分先註解掉 
+
+zlib安装：sudo yum install zlib-devel
+
+zlog是吃/home/syapp/slot/3000159/的zlog
+*之後的每款新遊戲要把zlog放在那個遊戲的資料夾下(zlog是子鎮給的)
+*然後要把zlog資料夾獨自make install(不能下make all,也不能到下一層zlog/src/內make)
+然後才下./compile_all.sh
+而compil_all.sh生成出來的object會在/root/bin/1/內  要cp -p 到/home/syc/bin/1/內
+
+要在 /home/syc/建log資料夾(否則zlog會報錯)
+
+***每當拿到一包新遊戲的code時:
+1.新遊戲要把zlog放在那個遊戲的資料夾下
+要把zlog資料夾獨自make install
+
+2.在server.h:
+打開__DEBUG__
+而__LINUX__要註解掉 否則rng 無法運行
+=>若以上設定正確,遊戲檔名可任意設3000xxx,且start_all.sh 的batch number也可以任意訂
+=>__LINUX__也要打開才能執行認證rng
+但會有錯誤代碼  可以不理它  或是在rng.c的line 442把log註解掉
+
+3.遊戲內的makefile要把生出來的檔案名改成自己的,或是看看有什麼生成規則需要更改
+
+./start_all.sh 執行遊戲
+但資訊太多要 > xxx.log(這中間要按大Y,因為sh會先問你要不要update)
+
+randomNumberGenerator/logic/內  會有mt.cpp  (如果沒有c++ compiler的話compile mt.cpp時會報錯)
+所以centos要安裝gcc的c++ compiler:
+yum -y update gcc
+yum -y install gcc+ gcc-c++
+
+4. 要用認證算法跑遊戲做驗證(rng)
+可以用ps aux| grep 10001 確認有沒有在背景運行
+沒有的話去/home/syc/bin/1/   ~/bin//1/random_number_generator -p 10001 放背景執行
+背景執行後,  再去執行某個遊戲
+(把__LINUX__註解掉是跑簡易算法,執行速度較快但是是比較不精確的隨機數,此算法非認證算法,
+所以當程式初期可用簡易算法增加執行跑測速度,但當數據接近後要使用認證算法才會更接近理論數值)
+
+

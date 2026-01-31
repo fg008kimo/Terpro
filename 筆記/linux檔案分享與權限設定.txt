@@ -1,0 +1,23 @@
+*提升其他使用者權限與root一樣:
+去visudo(他是一個.conf檔案)
+找到root    ALL=(ALL)       ALL
+在下面加上  syc     ALL=(ALL) NOPASSWD: ALL (syc是使用者  可任意更換其他使用者)
+
+=>其他使用者可以用sudo 做出root的行為(但不是全部指令都可以)
+=>切換root也不用打密碼
+
+工作日誌20240105-----------------------------------------------------------
+用syc編譯時 新移入的那包code因為在vmhgfs是用root移入的所以在編譯時沒有權限先刪除上一次的檔案
+解法: 先把hgfs的權限改成 777 
+再把syc加到visudo 裡面  裡面加上 syc     ALL=(ALL) NOPASSWD: ALL
+
+然後將新的那包code 移動到slot下之後
+修改owner給syc(因為上面windows的/shared把 遊戲那包code放到/mnt/hgfs/的使用者是root  所以這包code只有roo有權限)
+修改這包code的擁有者為syc的指令: sudo chown -R syc:syc 3000202/
+這樣就可以用syc編譯這包遊戲
+
+
+
+
+*讓共享資料夾可以讓其他使用者也可以共用:
+vmhgfs-fuse .host:/shared /mnt/hgfs -o nonempty -o allow_other (allow other中間有底線,這台電腦記事本底線被吃掉)

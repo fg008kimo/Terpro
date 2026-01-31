@@ -1,0 +1,9 @@
+
+共享資料夾vm centOs: /mnt/hgfs/    windows: C:\Users\SeanChen\Documents\Virtual_Machines\shared
+設定共享資料夾方法: https://blog.csdn.net/baidu_38300480/article/details/122390855
+開啟VMware軟體
+右鍵centOS圖案->enable共享資料夾->設定windows下的共享資料夾
+另一邊linux端 打vmware-hgfsclient查看共享資料夾名稱
+vmhgfs-fuse .host:/shared /mnt/hgfs -o nonempty掛載共享資料夾到mnt底下的資料夾 此資料夾可任意設, nonempty是若已經有設定過  他可以覆蓋此設定 第一次設定可以不用加
+
+vmhgfs-fuse .host:/shared /mnt/hgfs -o nonempty -o allow_other <=允許root以外的user使用此資料夾權限

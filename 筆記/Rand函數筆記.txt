@@ -1,0 +1,5 @@
+GetRand()(從一int當作範圍取一int) => getRandomValue()(return訂好的權重矩陣上的int)
+
+RandSelect() => 與getRandomValue()是一樣的運算邏輯,都是從權重矩陣上取一int
+只是getRandomValue()是for從大到小,因為權重矩陣是{0,8995},{1,264}...(由大到小)
+RandSelect()是for從小到大,因為權重矩陣由小到大排列: gFreeGameChangeWildModeProb = {50,100,150,100,100,600,600,1000,530,1220,600,1350,1300,1010,1290}

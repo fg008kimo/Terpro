@@ -1,0 +1,31 @@
+***先把遊戲資料夾移動到uploadToServerUse,在做以下修改:
+1.發布代碼,裡面開關
+algMammon.c要
+	<1>開啟mykill_1 和  mykill_2 (line 203 和 292)
+	<2>檢查json每個參數命名和data type是否正確
+	<3>handle_mammon_kill_fish()裡面:
+	   bet和betLineNum這兩個參數保持不變
+	   (alMammon.c裡面 val的成員要和alMammon.h一樣,但dataJson(與後段協議的字段)後面一定要是bet和betLineNum) 可參考3000214
+server.h 要開LINUX  關掉DEBUG
+zlog資料夾要刪除 因為服務器上面已經有了
+要假造syapp/slot/遊戲編號資料夾/遊戲整包的所有程式 (因為服務器上沒有syapp資料夾)
+  和syapp/sh  <=把compile_all.sh和 start_all.sh放進去
+makefile 按照local電腦的設定即可
+
+2.部屬:
+一：压缩syapp文件
+二：导入finalshell(在介面打rz 可以導入桌面的壓縮檔)(若用mobaXterm會有個上傳的圖案可點)
+三：解压，指令：unzip syapp.zip
+四：进入syapp文件夹
+五：chmod 777 compile_all.sh start_all.sh，使两个脚本可以编译(下chmod +x 檔名也可以)
+六：就正常运行两个脚本(正常執行即可,不用加&符號)
+(正確執行的話 ps aux|grep 遊戲ID會看到他在背景執行)
+
+3.部屬成功後 在final shell上刪除syapp.zip以及syapp資料夾
+(src code不要被別人看到)
+
+4.刪除正在執行的程序
+pkill -9 [遊戲ID]
+
+5.
+batch = 1 測帳服   3 內測服  4大獎(內測和測帳的大獎都是4)

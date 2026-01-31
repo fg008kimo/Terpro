@@ -1,0 +1,28 @@
+env 可以叫出環境參數
+
+修改方法:
+vim /etc/profile
+
+在最底下輸出新參數
+例如: 
+
+export PATH=/home/syc/bin/:$PATH
+export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH(LD,LIBRARY和PATH中間都有底線,被華碩筆電吃掉)
+
+修改完後打: source /etc/profile <=重新載入環境參數,重開機也沒用
+可以另外打 echo $LD_LIBRARY_PATH 確認是否有吃到參數
+
+修改PATH => 重開機會造成登入後 跑到黑畫面 又回到登入畫面的窘境
+
+暫時解決辦法:
+Ctrl + Alt + F2 進入到tty2模式
+vim /etc/profile把前面的環境參數改回來(所以PATH不能亂改參數,使用者權限要注意)
+
+改完按Ctrl + Alt + F1回到正常登入模式
+
+會一直重開機的根本原因:
+syc的帳號目錄底下  隱藏檔沒有.bash_profile 和 .bashrc (.bash_logout和.bash_history理論上也該有)<=所以正常的linux user /home/user資料夾底下會有4個隱藏檔
+沒有bash資料  所以/etc/profile會認不到使用者參數
+把.bash兩個檔案補上(內容物照抄創始用戶者的檔案就可以)
+然後要chown -R syc:syc syc/ <= change owner recursively user:group 哪些資料夾(加了-R所以syc/底下的資料夾權限都改成syc的)
+(編譯遊戲的時候使用者要用syc  否則因為root和syc的環境變數不同 他們的$HOME 數值不一樣, 放置object code的路徑會不一樣)

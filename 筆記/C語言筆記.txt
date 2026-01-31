@@ -1,0 +1,166 @@
+-> 和 .
+(*a).b = a->b
+
+所以a是指標用 ->
+不是指標用 .
+兩個都是去取得C: struct(C++: class)中的b成員
+-------------------------------------------------------------------------------------
+
+int *p[] 和 int (*p)[]
+參考: https://www.geeksforgeeks.org/difference-between-int-p3-and-int-p3/
+以上這篇心得: 假設
+int a[3] = {1,2,3};
+p = &a;
+for(int i = 0; i < 3; i++)   cout<< *(*(p)+i) <<" ";
+output是 1 2 3
+所以(*p)是一個pointer,指向array的第一個element
+---------------------------------------------
+int *p[3]的p是一個1x3矩陣,它是一個int pointer
+假設int a = 1, b = 2, c = 3; 
+    p[0] = &a; 
+    p[1] = &b; 
+    p[2] = &c; //每個元素都存每個int的address
+則for (int i = 0; i < 3; i++)  cout << *p[i] << " "; 
+output是 1 2 3
+
+或是參考這篇 https://www.quora.com/What-is-difference-between-int-*p-3-and-int*-p-3-in-C-language
+-------------------------------------------------------------------------------------
+
+extern和static
+假設aaa.h裡面有:
+extern int a;表示有別的.cpp檔宣告了int a是多少,但這裡不是主宣告處, 而是某個.cpp去include aaa.h檔然後會在裡面去宣告
+
+另有 extern "C" void fun(int a, int b); <=代表此函數按著C的規則去翻譯相應的函數名而不是C++的
+
+而static:
+分成
+1.static出現在variable之前 且在某function裡面:
+例: static int counter = 0;
+該變數不會因為function結束而消失
+
+2.static出現在variable之前 且不在某function裡面:
+main.cpp:
+#include "a.h"
+#include "b.h"
+
+int main(){
+	a();
+	b();
+}
+
+a.h:
+void a();
+
+a.cpp:
+static bool debug = true;
+void a() {
+    cout << debug << endl;
+}
+
+b.h:
+void b();
+
+b.cpp:
+static bool debug = false;
+void b() {
+    cout << debug << endl;
+}
+因為main.cpp include a.h和b.h,如此a,b中的debug function就是不同個,也不會影響彼此
+而為何不直接include a.cpp和b.cpp,因為這樣對main.cpp來說,他看到兩個地方都宣告debug變數,在compile的時候會被檢查到會失敗
+所以static能讓main裡面的a()和b()互不汙染
+
+參考: https://medium.com/@alan81920/c-c-%E4%B8%AD%E7%9A%84-static-extern-%E7%9A%84%E8%AE%8A%E6%95%B8-9b42d000688f
+
+參考2: https://honkersk.github.io/2018/09/12/const-static-extern%E5%8C%BA%E5%88%AB/
+---------------------------------------------------------------------------------------
+const: 
+參數前面加這個關鍵字,代表返回值不能被修改
+
+---------------------------------------------------------------------------------------
+C的多維矩陣傳遞:
+假設有在某 .h檔先定義:
+typedef struct{
+	int normalRewardInfos[MAX_CASCADE_NUM][MAX_REWARD_ICON_TYPE][3]; 
+}STR_AlgKillFishResultTemp;
+
+並預先定義: STR_AlgKillFishResultTemp gResult;
+
+最表層caller: board_gen(xx, xxx, xxx, ... , gResult.normalRewardInfos, ...)//這邊還是要寫出完整成員名稱
+
+board_gen()可以這樣定義: 
+void board_gen(xxx, xxx, ... , int (*rewardInfos)[MAX_REWARD_ICON_TYPE][3])//所以(*rewardInfos)涵蓋了第一維(幾個2維矩陣) =>  (*rewardInfos) = "normalRewardInfos[MAX_CASCADE_NUM]"[MAX_REWARD_ICON_TYPE][3]
+
+而board_gen()內部的函數可以寫成board_handle_normalIcon(xxx, xxx, ... , rewardInfos[*cascadeNum], ...)//!!!這邊比較要注意 rewardInfos[*cascadeNum]只顯示第一維, 但其實它後面還有第2維和第3維: normalRewardInfos[MAX_CASCADE_NUM]"[MAX_REWARD_ICON_TYPE][3]"
+定義: void board_handle_normalIcon(xxx, xxx, ..., int (*rewardInfo)[3], ...)//(*rewardInfo)涵蓋了第一維(幾個2維矩陣)和第二維(列) =>  (*rewardInfo) = "normalRewardInfos[MAX_CASCADE_NUM][MAX_REWARD_ICON_TYPE]"[3]
+
+*以三維矩陣來說: A[a][b][c]來說, b,c是列與行, a是第幾個2維矩陣的意思
+*四維矩陣 A[a][b][c][d], c,d是列與行, b是第幾個2維矩陣 ,a是第幾個三維矩陣。以此類推
+---------------------------------------------------------------------------------------
+C的傳址規則:(是否要加&的判斷)
+board_handle_normalIcon(icons[*cascadeNum], normalIconsNum, &multis[*cascadeNum], rewardInfos[*cascadeNum], &rewardIconTypes[*cascadeNum]);
+//multis 和 rewardIconTypes 在function內部是int要加&,rewardInfos是array就不用
+
+---------------------------------------------------------------------------------------
+C語言: uint8_t, uint16_t, uint32_t, uint64_t
+1. 帶有_t, 代表參數類型是透過typedef定義的,而不是新的數據類型,也就是說他們是已知的類型
+2. u是unsigned,代表無正負號
+3. 原始定義:
+typedef unsigned char uint8_t; (char = 1bytes)
+typedef unsigned short int uint16_t; (short = short int = 2bytes)
+typedef unsigned int uint32_t; (int = 4bytes)
+typedef unsigned long int uint64_t; (long int = 4 or 8 bytes)
+
+uint8_t為0~2^8-1 (0x00~0xFF)
+uint16_t為0~2^16-1 (0x0000~0xFFFF) (0~65535) (int16_t = -32768~32768) (uint16_t = 0~65535)
+uint32_t為0~2^32-1 (0x00000000~0xFFFFFFFF)
+uint64_t為0~2^64-1 (0x0000000000000000~0xFFFFFFFFFFFFFFFF)
+
+---------------------------------------------------------------------------------------
+
+struct跟class差異:
+不同之處     struct	        class
+型態	    值類型	 	參考類型
+預設成員	    public	 	private
+記憶體位置   Stack上	 	Heap上
+繼承	    只能實現Interface	可繼承也可實現Interface
+NULL	    不能NULL		可為NULL
+---------------------------------------------------------------------------------------
+
+
+雜筆記:
+
+1. printf內 \n是換行    \t是tab
+
+2. if() 括號內 寫 == 是判斷式  寫 = 是賦值,例如if(x=3) x就會變3
+
+3. 陣列給0初始化:
+ex: int iconsWildTemp[BOARD_ICON_NUM];
+<1>
+for (i = 0; i < BOARD_ICON_NUM; i++)
+	iconsWildTemp[i] = E_ICON_NULL;
+<2>
+memset(iconsWildTemp, 0, sizeof(int)*BOARD_ICON_NUM);
+
+4. 假設int a[100];
+memset(a, 0, sizeof(int)*100);  => 為0的範圍是a[0]~a[99], a[100]不會是0,會是此陣列最大值
+
+
+---------------------------------------------------------------------------------------
+初始化array:
+int array:
+memset(aaa, "0", sizeof(aaa));
+
+char array;
+char aaa[1024] = "";
+memset(aaa, "\0", sizeof(aaa)); <= passing argument 2 of 'memset' makes integer from pointer without a cast
+=> In C, there is a huge difference between single quotes ' and double quotes ". Single quotes are used for char values, and double quotes are 
+used for string (multiple character, or const char *) values.
+
+char *totalBuf = (char *)malloc(sizeof(char)*128);
+//totalBuf = "\0"; //error: segmentation fault
+//char totalBuf[128] = {0}; //error: function returns address of local variable <= 這樣宣告沒辦法經由char pointer function傳到function外部
+---------------------------------------------------------------------------------------
+data type大小問題:
+int如果改用s32 s64  =>  printf要用ld
+double 如果改用long double  => printf要用lf
+

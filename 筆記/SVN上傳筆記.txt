@@ -1,0 +1,11 @@
+1.在algMammon.c
+kill_1  和kill_2要註釋掉
+
+2.刪除ZLOG
+
+3.在server.h:
+開啟linux  註解debug
+
+
+
+
